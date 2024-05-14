@@ -3,6 +3,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Folders
+ml_algos_env/
+
+
 # C extensions
 *.so
 
