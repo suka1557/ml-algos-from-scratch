@@ -6,12 +6,12 @@ def generate_x_y(distribution='normal', no_features=1, sample_size=1000, low=0, 
 
     if distribution == 'normal':
         feature_data = rng.standard_normal(size=(sample_size, no_features))
-        target = rng.standard_normal(sample_size)
+        target = rng.standard_normal(size=(sample_size, 1))
 
     else:
         #Assuming uniform distribution is wanted
         feature_data = rng.uniform(low=low, high=high, size=(sample_size, no_features))
-        target = rng.uniform(low, high, sample_size)
+        target = rng.uniform(low, high, size=(sample_size, 1))
     
     return np.array(feature_data), target
 
