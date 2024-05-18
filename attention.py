@@ -10,6 +10,9 @@ rng = np.random.default_rng(seed=100)
 def get_random_weights(matrix_dim):
     return rng.standard_normal(size=(matrix_dim, matrix_dim))
 
+def get_random_weights_rectangular(n_rows, n_cols):
+    return rng.standard_normal(size=(n_rows, n_cols))
+
 def get_random_embeddings(length):
     return rng.standard_normal(size=(1, length))
 
@@ -141,18 +144,44 @@ class MultiHeadAttention:
         for attention_block in self.attention_heads:
             z_outputs.append(attention_block.perform_self_attention())
 
-        z_end = np.hstack(z_outputs)
+        z_end = np.concatenate(z_outputs, axis=-1)
 
         return z_end
 
         
+class EncoderBlock:
+    """
+    Currently this only includes multihead attention
+    
+    """
 
+    _weight_matrix_initialized = False
+
+    def __init__(self, z_start):
+        self.z_start = z_start
+
+    def initialise_weight_matrix(self):
+        if not self._weight_matrix_initialized:
+            self.W_o = get_random_weights_rectangular(n_rows=NO_ATTENTION_HEADS*EMBEDDING_DIM, n_cols=EMBEDDING_DIM)
+
+    def get_z_output(self):
+        if not self._weight_matrix_initialized:
+            self.initialise_weight_matrix()
+
+        multi_head_attention = MultiHeadAttention(z_start=self.z_start)
+        z_concatenated = multi_head_attention.perform_multihead_attention()
+
+        z_out = np.matmul(z_concatenated, self.W_o)
+
+        return z_out
+
+        
     
 
 sentence_batch_matrix = get_emb_matrix(sentences=sentences)
 
-multi_head_attention = MultiHeadAttention(z_start=sentence_batch_matrix)
-z_out = multi_head_attention.perform_multihead_attention()
+encoder = EncoderBlock(z_start=sentence_batch_matrix)
+z_out = encoder.get_z_output()
 
 print(sentence_batch_matrix.shape)
 print(z_out.shape)
