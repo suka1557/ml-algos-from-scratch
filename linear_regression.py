@@ -1,15 +1,20 @@
 from generate_reg_data import generate_x_y
 import numpy as np
+from sklearn.datasets import make_regression
+from sklearn.linear_model import LinearRegression
 
 #Parameters
-NO_FEATURES = 10
-NO_SAMPLES = 5000
+NO_FEATURES = 2
+NO_SAMPLES = 1000
 BATCH_SIZE = 128
-NO_EPOCHS = 5
+NO_EPOCHS = 10
 LEARNING_RATE = 0.05
 
+
+
 #Training Data
-X, Y = generate_x_y(no_features=NO_FEATURES, sample_size=NO_SAMPLES)
+# X, Y = generate_x_y(no_features=NO_FEATURES, sample_size=NO_SAMPLES)
+X, Y = make_regression(n_features=NO_FEATURES, n_samples=NO_SAMPLES, random_state=100)
 
 print(X.shape)
 print(Y.shape)
@@ -29,11 +34,12 @@ B = rng.standard_normal(size=(1,1))
 
 #pred function
 def get_predicted_y(weight, bias, x_matrix):
-    return np.matmul(x_matrix,weight) + bias
+    predictions = np.matmul(x_matrix,weight) + bias
+    return predictions
 
 #cost function
 def get_cost(y_pred, y_actual):
-    return np.mean( (y_pred - y_actual)**2 )
+    return np.sum( (y_actual - y_pred)**2 ) / len(y_actual)
 
 #gradient function
 #The gradient formula for linear regression is given by (X.T * error)
@@ -45,15 +51,16 @@ def get_cost(y_pred, y_actual):
 # Then gradient will be of the same shape as no of Weight Parameters
 # The gradient is multiplied by a factor (1/m) - This comes out from the differentiation of loss function
 def get_gradient_weights(x_matrix, y_pred, y_actual):
-    error = y_pred - y_actual
-    gradient = np.matmul(x_matrix.T, error) * (1/ len(y_pred))
-
+    error = y_actual - y_pred
+    gradient = np.matmul(np.transpose(x_matrix), error) 
+    gradient = gradient * (-2/len(y_actual))
     return gradient
 
 #For bias, terms the gradient is equal to the error term (y_pred, y_actual)
 # Since bias is of dim 1, we need to sum the error terms of all predictions to get final gradient
 def get_gradient_bias(y_pred, y_actual):
-    return np.sum((y_pred - y_actual)) * (1/ len(y_pred))
+    bias_gradient =  np.sum((y_actual - y_pred)) * (-2/len(y_actual)) 
+    return bias_gradient
 
 def update_bias(bias, bias_gradient, learning_rate =LEARNING_RATE):
     return bias - (learning_rate * bias_gradient)
@@ -62,18 +69,34 @@ def update_weights(weight, weight_gradient, learning_rate=LEARNING_RATE):
     return weight - (learning_rate * weight_gradient)
 
 if __name__ == '__main__':
+    print()
+    print(W.shape)
+    print(B.shape)
     NO_BATCHES = NO_SAMPLES // BATCH_SIZE
     for epoch in range(NO_EPOCHS):
         for i in range(NO_BATCHES):
-            x = X[i : i + BATCH_SIZE]
-            y_actual = Y[i : i + BATCH_SIZE]
-
+            x = X[i : i + BATCH_SIZE, :]
+            y_actual = Y[i : i + BATCH_SIZE].reshape(-1, 1)
+            #This reshaping is needed, as without it while calculating error, numpy erongly broadcasts it
+            # making the error matrix a square matrix
             y_pred = get_predicted_y(W, B, x)
             cost = get_cost(y_pred, y_actual)
             gradient_weights = get_gradient_weights(x, y_pred, y_actual)
             gradient_bias = get_gradient_bias(y_pred, y_actual)
-            print(cost)
             W = update_weights(W, gradient_weights)
             B = update_bias(B, gradient_bias)
+        
+    
+    print(cost)
+    print(W.shape)
+    print(B.shape)
+    #results for sklearn model
+    print()
+    model = LinearRegression()
+    model.fit(X,Y)
+    y_pred = model.predict(X)
+    print(get_cost(y_pred, Y))
+
+    #There is some mistake in Linear Reg Model which needs to be fixed
             
 
