@@ -7,26 +7,28 @@
 
 import numpy as np
 from generate_class_data import generate_x, generate_y
+from sklearn.datasets import make_classification
 
 
 #Parameters
 NO_FEATURES = 10
 NO_SAMPLES = 5000
 BATCH_SIZE = 128
-NO_EPOCHS = 5
-LEARNING_RATE = 0.05
+NO_EPOCHS = 100
+LEARNING_RATE = 0.1
 P_SUCCESS = 0.8
 
 #Training Data
-X = generate_x(no_features=NO_FEATURES, sample_size=NO_SAMPLES)
+# X = generate_x(no_features=NO_FEATURES, sample_size=NO_SAMPLES)
 
-binary_class_configs = {
-    'sample_size': NO_SAMPLES,
-    'classification': 'binary',
-    'probability_of_success': P_SUCCESS,
-}
+# binary_class_configs = {
+#     'sample_size': NO_SAMPLES,
+#     'classification': 'binary',
+#     'probability_of_success': P_SUCCESS,
+# }
 
-Y = generate_y(class_dict=binary_class_configs)
+# Y = generate_y(class_dict=binary_class_configs)
+X,Y = make_classification(n_classes=2, n_features=NO_FEATURES, n_samples=NO_SAMPLES)
 
 print(X.shape)
 print(Y.shape)
@@ -46,10 +48,10 @@ def get_predicted_y(weight, bias, x_matrix):
 
 #cost function
 def get_cost(y_pred, y_actual):
-    #Cost Part 1
-    cost1 = np.sum( np.multiply( y_actual, np.log(y_pred) ) )
+    #Cost Part 1 
+    cost1 = np.sum( y_actual * np.log(y_pred) )  # Elementwise multiplication
     #Cost Part 2
-    cost2 = np.sum( np.multiply( (1-y_actual) , np.log(1 - y_pred) ) )
+    cost2 = np.sum( (1-y_actual) * np.log(1 - y_pred) )  #Elementwise multiplication
 
     total_cost = (cost1 + cost2) * (-1/ len(y_pred))
 
@@ -58,13 +60,13 @@ def get_cost(y_pred, y_actual):
 #get gradient functions
 #using the property that gradients are same as linear regression
 def get_gradient_weights(x_matrix, y_pred, y_actual):
-    error = y_pred - y_actual
-    gradient = np.matmul(x_matrix.T, error) * (1/ len(y_pred))
+    error = y_actual - y_pred
+    gradient = np.matmul(x_matrix.T, error) * (-1/ len(y_pred))
 
     return gradient
 
 def get_gradient_bias(y_pred, y_actual):
-    return np.sum((y_pred - y_actual)) * (1/ len(y_pred))
+    return np.sum((y_actual - y_pred)) * (-1/ len(y_pred))
 
 #Update Weights and biases
 def update_bias(bias, bias_gradient, learning_rate =LEARNING_RATE):
@@ -79,7 +81,7 @@ if __name__ == '__main__':
     for epoch in range(NO_EPOCHS):
         for i in range(NO_BATCHES):
             x = X[i : i + BATCH_SIZE]
-            y_actual = Y[i : i + BATCH_SIZE]
+            y_actual = Y[i : i + BATCH_SIZE].reshape(-1, 1)
 
             y_pred = get_predicted_y(W, B, x)
             cost = get_cost(y_pred, y_actual)
