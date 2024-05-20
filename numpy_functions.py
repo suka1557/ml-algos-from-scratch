@@ -90,5 +90,16 @@ samples = np.random.normal(loc=5, scale=2, size=100)
 samples = np.random.standard_normal(size=100)
 # print(np.unique(samples, return_counts=True))
 
+"""
+Numpy Axis
+obj.sum(axis = 0) --> SUMS the COLUMNS (in 2-D Matrix)
+So OUTPUT = 1 ROW * NO OF COLUMNS
+
+obj.sum(axis = 1) --> SUMS THE ROWS (in 2-D Matrix)
+So OUTPUT = NO OF ROWS * 1 COLUMN
+
+Please note that this might be different from concat, vstack, hstack operations
+"""
+
 
 
